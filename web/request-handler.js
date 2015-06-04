@@ -14,8 +14,6 @@ var fs = require('fs');
 // require more modules/folders here!
 //
 //
-var indexPagePath = '/Users/HR10/2015-05-web-historian/web/public/index.html'
-
 exports.handleRequest = function (req, res) {
 
   var headers = httpHelper.headers;
@@ -23,7 +21,6 @@ exports.handleRequest = function (req, res) {
   var parsedURL = url.parse(req.url, true);
   var pathName = parsedURL.pathname;
   var site = pathName.slice(1)
-
 
   if (req.method === 'GET') {
     //header
@@ -33,7 +30,6 @@ exports.handleRequest = function (req, res) {
     //body
     if (!site) {
       var filePath = archive.paths.siteAssets + '/index.html';
-      console.log(filePath)
       fs.readFile(filePath,'utf8',function(err,data) {
        res.end(data);
       });
@@ -62,11 +58,15 @@ exports.handleRequest = function (req, res) {
 
       var tCallback = function(site,siteHTML) {
         var statusCode = 302;
-        headers['Location'] = archive.paths.archivedSites + '/' + site;
+        headers['Location'] = '/' + site;
         res.writeHead(statusCode, headers);
+        res.end('');
       };
       var fCallback = function(site) {
+        console.log('location: ',site);
+
         var statusCode = 302;
+        delete headers['Location'];
         res.writeHead(statusCode, headers);
         var filePath = archive.paths.siteAssets + '/loading.html';
         fs.readFile(filePath,'utf8',function(err,data) {

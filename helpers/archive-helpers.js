@@ -53,12 +53,8 @@ exports.isUrlInList = function(site, tCallback, fCallback){
 
 exports.addUrlToList = function(site){
   exports.readListOfUrls(function(sites) {
-            console.log('checking sitesbeforepushsite:' + sites + 'alldone');
-       console.log('checking sitebeforepushsite:' + site + 'alldone');
     sites.push(site);
-                console.log('checking sitesafterpushsite:' + sites + 'alldone');
     var sitesTxt = sites.join('\n') + '\n';
-        console.log(sites);
     var path = exports.paths.list;
     fs.writeFile(path, sitesTxt, function(err) {
       if (err) return console.log(err);
@@ -68,6 +64,7 @@ exports.addUrlToList = function(site){
 
 exports.isURLArchived = function(site, tCallback, fCallback){
   var siteLoc = exports.paths.archivedSites + '/' + site;
+
   fs.readFile(siteLoc,'utf8',function(err,siteHTML) {
     if (err) {
       fCallback(site);
