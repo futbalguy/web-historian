@@ -42,13 +42,19 @@ exports.handleRequest = function (req, res) {
       var siteLoc = archive.paths.archivedSites + '/' + site;
 
       fs.readFile(siteLoc,'utf8',function(err,siteHTML) {
-        res.end(siteHTML);
+        if (err) {
+          statusCode = 404;
+          res.writeHead(statusCode, headers);
+          res.end('Not found');
+        } else {
+          res.end(siteHTML);
+        }
       });
     }
 
   } else if (req.method === 'POST') {
     //header
-    var statusCode = 201;
+    var statusCode = 302;
     res.writeHead(statusCode, headers);
 
     //console.log('req: ',req)
@@ -59,10 +65,16 @@ exports.handleRequest = function (req, res) {
     });
 
     req.on('end', function(){
-      //var jsonData = JSON.parse(postData)
-      //unescape(jsonData);
-     // jsonData.roomname = _.unescape(roomName);
-      console.log(postData);
+      var site = postData.slice(4);
+      var sitesPath = archive.paths.list;
+      fs.readFile(sitesPath,'utf8',function(err,sitesData) {
+        if (err) return console.log(err);
+        sitesData += site + '\n';
+        fs.writeFile(sitesPath, sitesData, function(err) {
+          if (err) return console.log(err);
+          res.end('');
+        });
+      });
     })
 
     //body
@@ -72,21 +84,6 @@ exports.handleRequest = function (req, res) {
   }
 
 
-
-
-
-
-
 };
 
 
-    // var sitesPath = archive.paths.list;
-    // console.log('sites path: ' + sitesPath);
-    // fs.readFile(sitesPath,'utf8',function(err,sitesData) {
-    //  // res.end(sitesData);
-    //   var sitesArray = sitesData.split('\n');
-    //   console.log(site);
-    //   console.log('sites array: ', sitesArray);
-    //   if (sitesArray.indexOf(site) !== -1) {
-    //   }
-    // });
