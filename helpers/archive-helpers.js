@@ -1,6 +1,8 @@
 var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
+var http = require('http');
+var request = require('request');
 
 /*
  * You will need to reuse the same paths many times over in the course of this sprint.
@@ -29,7 +31,12 @@ exports.readListOfUrls = function(callback){
   var path = exports.paths.list;
    fs.readFile(path,'utf8',function(err,sitesData) {
         if (err) return console.log(err);
-        var sites = sitesData.split('\n')
+        var sites;
+        if (sitesData === '') {
+          sites = [];
+        } else {
+          sites = sitesData.split('\n')
+        }
         callback(sites);
       });
 };
@@ -46,8 +53,12 @@ exports.isUrlInList = function(site, tCallback, fCallback){
 
 exports.addUrlToList = function(site){
   exports.readListOfUrls(function(sites) {
+            console.log('checking sitesbeforepushsite:' + sites + 'alldone');
+       console.log('checking sitebeforepushsite:' + site + 'alldone');
     sites.push(site);
-    var sitesTxt = sites.join('\n');
+                console.log('checking sitesafterpushsite:' + sites + 'alldone');
+    var sitesTxt = sites.join('\n') + '\n';
+        console.log(sites);
     var path = exports.paths.list;
     fs.writeFile(path, sitesTxt, function(err) {
       if (err) return console.log(err);
@@ -55,8 +66,26 @@ exports.addUrlToList = function(site){
   });
 };
 
-exports.isURLArchived = function(){
+exports.isURLArchived = function(site, tCallback, fCallback){
+  var siteLoc = exports.paths.archivedSites + '/' + site;
+  fs.readFile(siteLoc,'utf8',function(err,siteHTML) {
+    if (err) {
+      fCallback(site);
+    } else {
+      tCallback(site, siteHTML);
+    }
+  });
 };
 
-exports.downloadUrls = function(){
+exports.downloadUrls = function(sites, callback){
+  for (var i=0; i < sites.length; i++) {
+    request('http://' + sites[i], function (error, response, body) {
+      if (error) {
+        console.log(error);
+      } else if (!error && response.statusCode == 200) {
+        console.log(body)
+        callback(body);
+      }
+    });
+  }
 };

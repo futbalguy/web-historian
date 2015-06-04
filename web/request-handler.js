@@ -38,26 +38,18 @@ exports.handleRequest = function (req, res) {
        res.end(data);
       });
     } else {
-
-      var siteLoc = archive.paths.archivedSites + '/' + site;
-
-      fs.readFile(siteLoc,'utf8',function(err,siteHTML) {
-        if (err) {
-          statusCode = 404;
-          res.writeHead(statusCode, headers);
-          res.end('Not found');
-        } else {
-          res.end(siteHTML);
-        }
-      });
+      var tCallback = function(site, siteHTML){
+        res.end(siteHTML);
+      };
+      var fCallback = function(site) {
+        statusCode = 404;
+        res.writeHead(statusCode, headers);
+        res.end('Not found');
+      };
+      archive.isURLArchived(site, tCallback, fCallback);
     }
 
   } else if (req.method === 'POST') {
-    //header
-    var statusCode = 302;
-    res.writeHead(statusCode, headers);
-
-    //console.log('req: ',req)
 
     var postData = '';
     req.on('data', function(item){
@@ -65,19 +57,35 @@ exports.handleRequest = function (req, res) {
     });
 
     req.on('end', function(){
-      var site = postData.slice(4);
-      var sitesPath = archive.paths.list;
-      fs.readFile(sitesPath,'utf8',function(err,sitesData) {
-        if (err) return console.log(err);
-        sitesData += site + '\n';
-        fs.writeFile(sitesPath, sitesData, function(err) {
-          if (err) return console.log(err);
-          res.end('');
-        });
-      });
-    })
 
-    //body
+      site = postData.slice(4);
+
+      var tCallback = function(site,siteHTML) {
+        var statusCode = 302;
+        headers['Location'] = archive.paths.archivedSites + '/' + site;
+        res.writeHead(statusCode, headers);
+      };
+      var fCallback = function(site) {
+        var statusCode = 302;
+        res.writeHead(statusCode, headers);
+        var filePath = archive.paths.siteAssets + '/loading.html';
+        fs.readFile(filePath,'utf8',function(err,data) {
+         res.end(data);
+        });
+        // checking if URL in the sites.txt file
+        var trueCB = function() {
+          // does nothing; waiting for worker to handle this entry
+        };
+        var falseCB = function(site) {
+          archive.addUrlToList(site);
+        };
+        archive.isUrlInList(site, trueCB, falseCB);
+
+      }
+      archive.isURLArchived(site, tCallback, fCallback);
+    });
+
+
   } else if (req.method === 'OPTIONS') {
     var statusCode = 200;
     res.writeHead(statusCode, headers);
